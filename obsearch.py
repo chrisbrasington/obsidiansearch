@@ -8,7 +8,7 @@ def find_in_file(file_path, search_term):
             for line_number, line in enumerate(lines):
                 if search_term in line:
                     start_line = max(0, line_number - 2)
-                    end_line = min(len(lines), line_number + 3)
+                    end_line = min(len(lines), line_number + 4)
                     context = lines[start_line:end_line]
                     return line_number + 1, context
     except (UnicodeDecodeError, FileNotFoundError):
@@ -22,7 +22,16 @@ def search_directory(directory, search_term):
                 file_path = os.path.join(root, file_name)
                 line_number, context = find_in_file(file_path, search_term)
                 if line_number is not None:
-                    print(f"Found '{search_term}' in Markdown file: {file_path}, Line {line_number}")
+                    abs_file_path = os.path.abspath(file_path)
+
+                    term_program = os.environ.get('TERM_PROGRAM', '')
+
+                    if term_program == 'vscode':
+                        print (abs_file_path)
+                    else:
+                        print(f"\u001b]8;;file://{abs_file_path}\u001b\\{abs_file_path} - Line {line_number}\u001b]8;;\u001b\\")
+
+                    print(f"Line {line_number}")
                     for line in context:
                         print(line.strip())
 
