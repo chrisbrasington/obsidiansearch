@@ -4,20 +4,27 @@ import argparse
 def find_in_file(file_path, search_term):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-            if search_term in content:
-                return True
+            lines = file.readlines()
+            for line_number, line in enumerate(lines):
+                if search_term in line:
+                    start_line = max(0, line_number - 2)
+                    end_line = min(len(lines), line_number + 3)
+                    context = lines[start_line:end_line]
+                    return line_number + 1, context
     except (UnicodeDecodeError, FileNotFoundError):
         pass
-    return False
+    return None, None
 
 def search_directory(directory, search_term):
     for root, _, files in os.walk(directory):
         for file_name in files:
             if file_name.lower().endswith('.md'):
                 file_path = os.path.join(root, file_name)
-                if find_in_file(file_path, search_term):
-                    print(f"Found '{search_term}' in Markdown file: {file_path}")
+                line_number, context = find_in_file(file_path, search_term)
+                if line_number is not None:
+                    print(f"Found '{search_term}' in Markdown file: {file_path}, Line {line_number}")
+                    for line in context:
+                        print(line.strip())
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a string in markdown files.')
