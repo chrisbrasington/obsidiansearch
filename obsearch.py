@@ -100,7 +100,7 @@ def check_for_continue(displayed_count, total_count):
     
     # if display_count is divisible by number, ask the user to continue
     if displayed_count % 2 == 0 :
-        cont = input('Press enter to continue... (q to quit)')
+        cont = input('Press enter to continue... (q to quit) ')
     
         if cont != '':
             sys.exit()
