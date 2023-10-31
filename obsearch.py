@@ -68,19 +68,42 @@ def print_green(text, end='\n'):
 def print_blue(text):
     print(f"\033[94m{text}\033[0m")   
 
+def hide_tips():
+    value = get_config_value('hide_tips')   
+    # ughhh ini files
+    if value is None:
+        return False
+    if value.lower() == 'true':
+        return True
+    return False
+
 def get_vault_path():
-    obsidian_vault = None
+    return get_config_value('obsidian_vault')   
+
+def get_config_value(key):
+    value = None
     config_file = os.path.expanduser('~/.config/obsidiansearch/config.ini')
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
-        obsidian_vault = config.get('DEFAULT', 'obsidian_vault')
-    return obsidian_vault        
+        value = config.get('DEFAULT', key)
+    return value        
 
 def print_result(result, search_term):
     print_file_link(result.file_path, result.line_number)
     print_contents(result.context, result.line_number, search_term)
     print_seperator()
+
+def check_for_continue(displayed_count, total_count):
+    if(displayed_count == total_count):
+        return
+    
+    # if display_count is divisible by number, ask the user to continue
+    if displayed_count % 2 == 0 :
+        cont = input('Press enter to continue... (q to quit)')
+    
+        if cont != '':
+            sys.exit()
 
 def search_directory(directory, search_term, search_all):
 
@@ -118,13 +141,25 @@ def search_directory(directory, search_term, search_all):
                             context = lines[:10] # get first 10 lines
                         results_with_title_match.append(Results(-1, file_path, context))
 
+    displayed_count = 0
+    if search_all is None:
+        total_count = len(results_with_title_match)
+    else:
+        total_count = len(results_with_title_match) + len(results)
+
     if len(results_with_title_match) > 0:
-        print(f'Found {len(results_with_title_match)} results with title match')
+        print(f'Found {len(results_with_title_match)} results with title match', end='')
+        if search_all is None:
+            print(' (only showing)')
+        else:
+            print()
+
     if len(results) > 0:
         print(f'Found {len(results)} results content match')
 
     if search_all is None and len(results_with_title_match) > 0:
-        print(f'Use `all` after search_term to show all results')
+        if not hide_tips():
+            print(f'Use `all` after search_term to show all results')
 
     if len(results_with_title_match) > 0 or len(results) > 0:
         print()
@@ -132,15 +167,18 @@ def search_directory(directory, search_term, search_all):
     # if search term is in title, print those
     for result in results_with_title_match:
         print_result(result, search_term)
+        displayed_count += 1
+        check_for_continue(displayed_count, total_count)
 
     # if search term is not in title, print all
     if search_all is not None or len(results_with_title_match) == 0 : 
         for result in results:
             print_result(result, search_term)
+            displayed_count += 1
+            check_for_continue(displayed_count, total_count)
 
     if len(results_with_title_match) == 0 and len(results) == 0:
         print(f'No results found for {search_term}')
-    
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a string in markdown files.')
@@ -150,7 +188,7 @@ def main():
     parser.add_argument('all', nargs='?', help='If exists, show all matches regardless of title match.')
     args = parser.parse_args()
 
-    print(args)
+    # print(args)
     
     obsidian_vault = get_vault_path()
 
