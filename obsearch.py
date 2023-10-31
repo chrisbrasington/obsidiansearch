@@ -96,14 +96,20 @@ def search_directory(directory, search_term, search_all):
 
                 title_match = False
                 if search_term in file_name.lower():
-                    # results_with_title_match.append(Results(0, os.path.join(root, file_name), []))
                     title_match = True
 
                 file_path = os.path.join(root, file_name)
                 line_number, context = find_in_file(file_path, search_term)
 
+                # found in content
                 if line_number is not None:
-                    results.append(Results(line_number, file_path, context))
+                    # found in title and content
+                    if title_match:
+                        results_with_title_match.append(Results(line_number, file_path, context))
+                    # found in content only
+                    else:
+                        results.append(Results(line_number, file_path, context))
+                # found in title only, read some of the file from front
                 else:
                     context = None
                     if title_match:
@@ -111,17 +117,15 @@ def search_directory(directory, search_term, search_all):
                             lines = f.readlines()
                             context = lines[:10] # get first 10 lines
                         results_with_title_match.append(Results(-1, file_path, context))
-                            
-
-    # if search term is in title, only print those
-    for result in results:
-        if search_term in result.file_path.lower():
-            results_with_title_match.append(result)
 
     if len(results_with_title_match) > 0:
         print(f'Found {len(results_with_title_match)} results with title match')
     if len(results) > 0:
         print(f'Found {len(results)} results content match')
+
+    if search_all is None and len(results_with_title_match) > 0:
+        print(f'Use `all` after search_term to show all results')
+
     if len(results_with_title_match) > 0 or len(results) > 0:
         print()
 
@@ -140,14 +144,17 @@ def search_directory(directory, search_term, search_all):
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a string in markdown files.')
-    parser.add_argument('search_term', nargs='?', help='The string to search for in markdown files.')
-    parser.add_argument('search_all', nargs='?', help='If exists, show all matches regardless of title match.')
+    # parser.add_argument('--search', nargs='?', help='The string to search for in markdown files.')
     parser.add_argument('--directory', default='.', help='The directory to start the search (default: current directory)')
+    parser.add_argument('search', nargs='?', help='The string to search for in markdown files.')
+    parser.add_argument('all', nargs='?', help='If exists, show all matches regardless of title match.')
     args = parser.parse_args()
 
+    print(args)
+    
     obsidian_vault = get_vault_path()
 
-    if not args.search_term:
+    if not args.search:
 
         if obsidian_vault == None:
             print('No obsidian vault config, run create_settings.sh')
@@ -163,7 +170,7 @@ def main():
         
         args.directory = obsidian_vault
 
-        search_directory(args.directory, args.search_term, args.search_all)
+        search_directory(args.directory, args.search, args.all)
 
 if __name__ == '__main__':
     main()
