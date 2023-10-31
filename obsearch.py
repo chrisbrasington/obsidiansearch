@@ -162,7 +162,7 @@ def search_directory(directory, search_term, search_all):
             print(f'Use `all` after search_term to show all results')
 
     if len(results_with_title_match) > 0 or len(results) > 0:
-        print()
+        print_seperator()
 
     # if search term is in title, print those
     for result in results_with_title_match:
