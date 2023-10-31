@@ -118,7 +118,7 @@ def search_directory(directory, search_term, search_all):
 
     full_contents = False
 
-    if search_all.lower() == 'full':
+    if search_all is not None and search_all.lower() == 'full':
         full_contents = True
 
     results_with_title_match = []
