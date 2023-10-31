@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os
+import os, sys
 import argparse
 import configparser
 
@@ -17,6 +17,47 @@ def find_in_file(file_path, search_term):
         pass
     return None, None
 
+def print_file_link(file_path, line_number):
+    abs_file_path = os.path.abspath(file_path)
+    term_program = os.environ.get('TERM_PROGRAM', '')
+
+    if term_program == 'vscode':
+        print_blue (abs_file_path)
+    else:
+        vault = get_vault_path()
+        title = abs_file_path.replace(vault, '').replace('.md', '')
+
+        print_blue(f"\u001b]8;;file://{abs_file_path}\u001b\\{title} - Line {line_number}\u001b]8;;\u001b\\")
+
+def print_contents(context, line_number, search_term):
+    print(f"Line {line_number}")
+    for line in context:
+
+        if search_term in line:
+            print_green(line, end='')
+        else:
+            print(line.strip())
+
+def print_seperator():
+    print('-' * 80)
+
+def print_green(text, end='\n'):
+    # bold only -  text = f"\033[1m{text}\033[0m"
+    text = f"\033[1;32m{text}\033[0m"
+    print(text, end=end)
+
+def print_blue(text):
+    print(f"\033[94m{text}\033[0m")   
+
+def get_vault_path():
+    obsidian_vault = None
+    config_file = os.path.expanduser('~/.config/obsidiansearch/config.ini')
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        obsidian_vault = config.get('DEFAULT', 'obsidian_vault')
+    return obsidian_vault
+
 def search_directory(directory, search_term):
     for root, _, files in os.walk(directory):
         for file_name in files:
@@ -24,18 +65,12 @@ def search_directory(directory, search_term):
                 file_path = os.path.join(root, file_name)
                 line_number, context = find_in_file(file_path, search_term)
                 if line_number is not None:
-                    abs_file_path = os.path.abspath(file_path)
 
-                    term_program = os.environ.get('TERM_PROGRAM', '')
+                    print_file_link(file_path, line_number)
 
-                    if term_program == 'vscode':
-                        print (abs_file_path)
-                    else:
-                        print(f"\u001b]8;;file://{abs_file_path}\u001b\\{abs_file_path} - Line {line_number}\u001b]8;;\u001b\\")
+                    print_contents(context, line_number, search_term)
 
-                    print(f"Line {line_number}")
-                    for line in context:
-                        print(line.strip())
+                    print_seperator()
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a string in markdown files.')
@@ -43,12 +78,7 @@ def main():
     parser.add_argument('--directory', default='.', help='The directory to start the search (default: current directory)')
     args = parser.parse_args()
 
-    obsidian_vault = None
-    config_file = os.path.expanduser('~/.config/obsidiansearch/config.ini')
-    if os.path.exists(config_file):
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        obsidian_vault = config.get('DEFAULT', 'obsidian_vault')
+    obsidian_vault = get_vault_path()
 
     if not args.search_term:
 
