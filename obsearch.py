@@ -58,7 +58,17 @@ def get_vault_path():
         obsidian_vault = config.get('DEFAULT', 'obsidian_vault')
     return obsidian_vault
 
+class Results:
+    def __init__(self, line_number, file_path, context):
+        self.line_number = line_number
+        self.file_path = file_path
+        self.context = context
+        
+
 def search_directory(directory, search_term):
+
+    results = []
+
     for root, _, files in os.walk(directory):
         for file_name in files:
             if file_name.lower().endswith('.md'):
@@ -66,11 +76,30 @@ def search_directory(directory, search_term):
                 line_number, context = find_in_file(file_path, search_term)
                 if line_number is not None:
 
-                    print_file_link(file_path, line_number)
+                    results.append(Results(line_number, file_path, context))
 
-                    print_contents(context, line_number, search_term)
+                    # print_file_link(file_path, line_number)
 
-                    print_seperator()
+                    # print_contents(context, line_number, search_term)
+
+                    # print_seperator()
+
+    foundInTitle = False
+
+    # if search term is in title, only print those
+    for result in results:
+        if search_term in result.file_path:
+            print_file_link(result.file_path, result.line_number)
+            print_contents(result.context, result.line_number, search_term)
+            print_seperator()
+            foundInTitle = True
+
+    # if search term is not in title, print all
+    if not foundInTitle:
+        for result in results:
+            print_file_link(result.file_path, result.line_number)
+            print_contents(result.context, result.line_number, search_term)
+            print_seperator()
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a string in markdown files.')
