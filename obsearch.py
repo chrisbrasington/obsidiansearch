@@ -64,7 +64,6 @@ def main():
         parser.print_help()
     else:
         
-        print(obsidian_vault)
         args.directory = obsidian_vault
 
         search_directory(args.directory, args.search_term)
