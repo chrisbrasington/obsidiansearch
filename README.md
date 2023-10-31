@@ -17,7 +17,8 @@ python obsidiansearch.py [OPTIONS] SEARCH_TERM [ALL]
 ```
 
 - `SEARCH_TERM`: The string you want to search for in Markdown files.
-- `ALL` (optional): If specified, all matches will be shown regardless of title match.
+- `all` (optional): If specified, all matches will be shown regardless of title match.
+- `full` (optional): If specified, full file will output, prompting between each file
 
 ### Options
 

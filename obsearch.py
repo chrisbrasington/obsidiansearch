@@ -14,7 +14,7 @@ class Results:
 
         self.context = context
 
-def find_in_file(file_path, search_term):
+def find_in_file(file_path, search_term, get_full_contents):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
@@ -26,7 +26,10 @@ def find_in_file(file_path, search_term):
                 if search_term in line.lower():
                     start_line = max(0, line_number - 1)
                     end_line = min(len(lines), line_number + 4)
-                    context = lines[start_line:end_line]
+                    if get_full_contents:
+                        context = lines
+                    else:
+                        context = lines[start_line:end_line]
                     return line_number + 1, context
     except (UnicodeDecodeError, FileNotFoundError):
         pass
@@ -94,20 +97,29 @@ def print_result(result, search_term):
     print_contents(result.context, result.line_number, search_term)
     print_seperator()
 
-def check_for_continue(displayed_count, total_count):
+def check_for_continue(displayed_count, total_count, get_full_contents):
     if(displayed_count == total_count):
         return
-    
+
     # if display_count is divisible by number, ask the user to continue
-    if displayed_count % 2 == 0 :
+    if displayed_count % 2 == 0 or get_full_contents:
         cont = input('Press enter to continue... (q to quit) ')
     
         if cont != '':
             sys.exit()
 
+        if get_full_contents:
+            # clear console
+            os.system('cls' if os.name == 'nt' else 'clear')
+
 def search_directory(directory, search_term, search_all):
 
     search_term = search_term.lower()
+
+    full_contents = False
+
+    if search_all.lower() == 'full':
+        full_contents = True
 
     results_with_title_match = []
     results = []
@@ -122,7 +134,7 @@ def search_directory(directory, search_term, search_all):
                     title_match = True
 
                 file_path = os.path.join(root, file_name)
-                line_number, context = find_in_file(file_path, search_term)
+                line_number, context = find_in_file(file_path, search_term, full_contents)
 
                 # found in content
                 if line_number is not None:
@@ -138,7 +150,12 @@ def search_directory(directory, search_term, search_all):
                     if title_match:
                         with open(file_path, 'r') as f:
                             lines = f.readlines()
-                            context = lines[:10] # get first 10 lines
+
+                            if full_contents:
+                                context = lines
+                            else:
+                                context = lines[:10] # get first 10 lines
+
                         results_with_title_match.append(Results(-1, file_path, context))
 
     displayed_count = 0
@@ -168,14 +185,14 @@ def search_directory(directory, search_term, search_all):
     for result in results_with_title_match:
         print_result(result, search_term)
         displayed_count += 1
-        check_for_continue(displayed_count, total_count)
+        check_for_continue(displayed_count, total_count, full_contents)
 
     # if search term is not in title, print all
     if search_all is not None or len(results_with_title_match) == 0 : 
         for result in results:
             print_result(result, search_term)
             displayed_count += 1
-            check_for_continue(displayed_count, total_count)
+            check_for_continue(displayed_count, total_count, full_contents)
 
     if len(results_with_title_match) == 0 and len(results) == 0:
         print(f'No results found for {search_term}')
