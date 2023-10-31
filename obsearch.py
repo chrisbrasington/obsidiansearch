@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
 import os
 import argparse
+import configparser
 
 def find_in_file(file_path, search_term):
     try:
@@ -7,7 +9,7 @@ def find_in_file(file_path, search_term):
             lines = file.readlines()
             for line_number, line in enumerate(lines):
                 if search_term in line:
-                    start_line = max(0, line_number - 2)
+                    start_line = max(0, line_number - 1)
                     end_line = min(len(lines), line_number + 4)
                     context = lines[start_line:end_line]
                     return line_number + 1, context
@@ -37,11 +39,35 @@ def search_directory(directory, search_term):
 
 def main():
     parser = argparse.ArgumentParser(description='Search for a string in markdown files.')
-    parser.add_argument('search_term', help='The string to search for in markdown files.')
+    parser.add_argument('search_term', nargs='?', help='The string to search for in markdown files.')
     parser.add_argument('--directory', default='.', help='The directory to start the search (default: current directory)')
     args = parser.parse_args()
 
-    search_directory(args.directory, args.search_term)
+    obsidian_vault = None
+    config_file = os.path.expanduser('~/.config/obsidiansearch/config.ini')
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        obsidian_vault = config.get('DEFAULT', 'obsidian_vault')
+
+    if not args.search_term:
+
+        if obsidian_vault == None:
+            print('No obsidian vault config, run create_settings.sh')
+        else:
+            print(f'Using obsidian vault: {obsidian_vault}', end='\n')
+            if os.path.exists(obsidian_vault):
+                print('Vault exists')
+            else: 
+                print('Vault does not exist')
+
+        parser.print_help()
+    else:
+        
+        print(obsidian_vault)
+        args.directory = obsidian_vault
+
+        search_directory(args.directory, args.search_term)
 
 if __name__ == '__main__':
     main()
