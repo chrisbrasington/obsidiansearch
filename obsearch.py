@@ -124,7 +124,7 @@ def search_directory(directory, search_term, search_all):
     results_with_title_match = []
     results = []
 
-    for root, dirs, files in os.walk(directory):
+    for root, dirs, files in os.walk(directory, followlinks=True):
         dirs[:] = [d for d in dirs if not d.startswith('.')] # skip hidden folders
         for file_name in files:
             if file_name.lower().endswith('.md'):
