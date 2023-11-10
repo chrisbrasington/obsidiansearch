@@ -213,7 +213,8 @@ def search_directory(directory, search_term, search_all):
             command = extract_code_block(result.context)
 
     if command != '':
-        print(f'Adding command to clipboard: {command}')
+        # print(f'Adding command to clipboard: {command}')
+        print(command)
         clipboard.copy(command)
 
     # if search term is not in title, print all
