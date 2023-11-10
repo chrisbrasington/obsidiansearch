@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-import os, sys
+import os, sys, re
 import argparse
 import configparser
+# import pyperclip
+import clipboard
 
 class Results:
     def __init__(self, line_number, file_path, context):
@@ -112,6 +114,24 @@ def check_for_continue(displayed_count, total_count, get_full_contents):
             # clear console
             os.system('cls' if os.name == 'nt' else 'clear')
 
+def extract_code_block(lines):
+    result = ''
+
+    recording = False
+
+    for l in lines:
+        if recording:
+            result += l.strip('\n')
+        if l.startswith('```'):
+            if recording:
+                break           # end
+            recording = True    # start
+        else:
+            if recording:
+                break
+
+    return result
+
 def search_directory(directory, search_term, search_all):
 
     search_term = search_term.lower()
@@ -181,11 +201,20 @@ def search_directory(directory, search_term, search_all):
     if len(results_with_title_match) > 0 or len(results) > 0:
         print_seperator()
 
+    command = ''
+
     # if search term is in title, print those
     for result in results_with_title_match:
         print_result(result, search_term)
         displayed_count += 1
         check_for_continue(displayed_count, total_count, full_contents)
+
+        if command == '':
+            command = extract_code_block(result.context)
+
+    if command != '':
+        print(f'Adding command to clipboard: {command}')
+        clipboard.copy(command)
 
     # if search term is not in title, print all
     if search_all is not None or len(results_with_title_match) == 0 : 
