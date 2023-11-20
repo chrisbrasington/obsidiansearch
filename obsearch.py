@@ -86,12 +86,15 @@ def get_vault_path():
     return get_config_value('obsidian_vault')   
 
 def get_config_value(key):
-    value = None
-    config_file = os.path.expanduser('~/.config/obsidiansearch/config.ini')
-    if os.path.exists(config_file):
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        value = config.get('DEFAULT', key)
+    try:
+        value = None
+        config_file = os.path.expanduser('~/.config/obsidiansearch/config.ini')
+        if os.path.exists(config_file):
+            config = configparser.ConfigParser()
+            config.read(config_file)
+            value = config.get('DEFAULT', key)
+    except:
+        return None
     return value        
 
 def print_result(result, search_term):
